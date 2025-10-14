@@ -1,18 +1,16 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import localFont from "next/font/local";
+import { AudioProvider } from "@/app/components/Audio/AudioProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const trenchFont = localFont({
+  src: "./fonts/TrenchThin.ttf",
+  variable: "--font-trench",
+  weight: "100 900",
 });
 
 export const metadata = {
-  title: "PD World",
+  title: "Post-digital World",
   description: "Post-digital world",
 };
 
@@ -20,9 +18,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${trenchFont.variable} antialiased select-none`}
       >
-        {children}
+        <AudioProvider>
+          {children}
+        </AudioProvider>
       </body>
     </html>
   );
