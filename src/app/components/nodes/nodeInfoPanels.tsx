@@ -38,7 +38,7 @@ export const NodeInfoPanels: React.FC<NodeInfoPanelsProps> = ({
         setFadeIn(true);
       }, 50); // delay para fade-in
       return () => clearTimeout(timerFade);
-    }, 1000); // duración del "tracking"
+    }, 2000); // duración del "tracking"
 
     return () => clearTimeout(timerTracking);
   }, [mesh]);
@@ -90,12 +90,12 @@ const leftTracker = screenPos.x - boxSize / 2;
             justifyContent: "center",
             alignItems: "center",
             pointerEvents: "none",
-            opacity: 0.5,
+            opacity: 1.0,
             transition: "opacity 0.6s ease-in-out",
             textAlign: "center",
           }}
         >
-          <TypewriterText text="tracking..." speed={30} />
+          <TypewriterText text="analyzing..." speed={30} />
           <div style={spinnerStyle}></div>
         </div>
       )}
@@ -206,7 +206,7 @@ const leftTracker = screenPos.x - boxSize / 2;
               text={
                 mesh.userData.description?.trim()
                   ? mesh.userData.description
-                  : "potentially corrupted data"
+                  : "corrupted data"
               }
               speed={50}
             />

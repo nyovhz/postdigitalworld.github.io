@@ -6,6 +6,7 @@ import { useSceneSetup } from "./useSceneSetup";
 import { useGraphEvents, getOppositeNormalFromEdge } from "./useGraphEvents";
 import { setupPostProcessing } from "./usePostProcessing";
 import { NodeInfoPanels } from "./nodeInfoPanels";
+import { scanMaterial } from "./materials";
 
 export default function Graph3D() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -20,7 +21,7 @@ export default function Graph3D() {
   const nodeMeshesRef = useRef<THREE.Mesh[]>([]);
   const transitionFnRef = useRef<((now: number) => boolean) | null>(null);
 
-  const baseBoxSize = 700;
+  const baseBoxSize = 750;
   const baseGap = 400;
   const baseFontSize = 90;
 
@@ -37,7 +38,7 @@ export default function Graph3D() {
       fxaa: true,
       motionBlur: true,
       film: true,
-      filmIntensity: 0.5,
+      filmIntensity: 0.8,
       gammaCorrection: true,
     });
 
@@ -85,6 +86,7 @@ export default function Graph3D() {
     const clock = new THREE.Clock();
     const animate = (now: number) => {
       const t = clock.getElapsedTime() * 0.2;
+      scanMaterial.uniforms.time.value = performance.now() / 1000;
 
       nodeMeshes.forEach((mesh, i) => {
         const noise = new THREE.Vector3(

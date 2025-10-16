@@ -10,7 +10,7 @@ const trenchFont = localFont({
 });
 
 export const metadata = {
-  title: "Post-digital World",
+  title: "post-digital world",
   description: "Post-digital world",
 };
 

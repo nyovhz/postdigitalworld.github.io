@@ -19,8 +19,8 @@ export interface Edge {
 }
 
 export const useNodesAndEdges = (
-  placementRadius = 8,
-  nodeRadius = 0.35
+  placementRadius = 0.2,
+  nodeRadius = 0.25
 ) => {
   const nodes: GraphNode[] = [];
   const nodeMeshes: THREE.Mesh[] = [];
@@ -28,7 +28,6 @@ export const useNodesAndEdges = (
   const nodeGeometry = new THREE.SphereGeometry(nodeRadius, 32, 32);
   const simplex = createNoise3D();
 
-  // ✅ Crear un nodo por cada objeto del array
   for (const data of nodesData) {
     const pos = new THREE.Vector3(
       Math.random() * placementRadius - placementRadius / 2,

@@ -19,10 +19,10 @@ export const useSceneSetup = (
   const height = mountRef.current.clientHeight;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#161616");
+  scene.background = new THREE.Color(0x0d0d12); // fondo default
 
-  const InitialCameraPos = new THREE.Vector3(0, 0, 15);
-  const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+  const InitialCameraPos = new THREE.Vector3(0, 0, 25);
+  const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
   camera.position.copy(InitialCameraPos);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -31,37 +31,39 @@ export const useSceneSetup = (
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   (renderer as any).outputEncoding = (THREE as any).sRGBEncoding;
-  renderer.toneMapping = THREE.NoToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
   renderer.autoClear = false;
 
   mountRef.current.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.02;
+  controls.dampingFactor = 0.03;
 
-  // --- Lights ---
-  const ambient = new THREE.AmbientLight(0xffffff, 100);
+  // --- Lighting setup ---
+  const keyLight = new THREE.DirectionalLight(0xfff0e5, 2.5);
+  keyLight.position.set(15, 20, 10);
+  keyLight.castShadow = true;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x4499ff, 1.0);
+  fillLight.position.set(-15, 10, 10);
+  scene.add(fillLight);
+
+  const accentLight = new THREE.SpotLight(0xffffff, 2.0);
+  accentLight.position.set(0, 15, -15);
+  accentLight.angle = Math.PI / 6;
+  accentLight.penumbra = 0.4;
+  accentLight.decay = 2;
+  accentLight.distance = 50;
+  accentLight.castShadow = true;
+  scene.add(accentLight);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.1);
   scene.add(ambient);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 5);
-  dirLight.position.set(10, 20, 10);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.width = 1024;
-  dirLight.shadow.mapSize.height = 1024;
-  dirLight.shadow.camera.near = 0.5;
-  dirLight.shadow.camera.far = 50;
-  scene.add(dirLight);
-
-  // --- Shadow plane ---
-  const planeGeo = new THREE.PlaneGeometry(200, 200);
-  const planeMat = new THREE.ShadowMaterial({ opacity: 0.1 });
-  const plane = new THREE.Mesh(planeGeo, planeMat);
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.y = -5;
-  plane.receiveShadow = true;
-  scene.add(plane);
+  // --- No environment map, solo fondo y luces ---
 
   return { scene, camera, renderer, controls, InitialCameraPos };
 };

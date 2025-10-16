@@ -1,7 +1,7 @@
 // useGraphEvents.ts
 import * as THREE from "three";
 import { createCameraTransition } from "./useCameraTransition";
-import { baseMaterial, selectedMaterial, hoverMaterial } from "./materials";
+import { baseMaterial, selectedMaterial, hoverMaterial, scanMaterial } from "./materials";
 
 type UseGraphEventsParams = {
     camera: THREE.PerspectiveCamera;
@@ -59,9 +59,17 @@ export const useGraphEvents = ({
             selectedNodeRef.current = id;
             setCameraTransitioning(true);
 
+            // 1️⃣ Cambiar inmediatamente a scanMaterial
             nodeMeshes.forEach((m, i) => {
-                m.material = i === id ? selectedMaterial : baseMaterial;
+                m.material = i === id ? scanMaterial : baseMaterial;
             });
+
+            // 2️⃣ Después de 2 segundos, cambiar a selectedMaterial
+            setTimeout(() => {
+                nodeMeshes.forEach((m, i) => {
+                    m.material = i === id ? selectedMaterial : baseMaterial;
+                });
+            }, 3000);
 
             const startPoint = mesh.position
                 .clone()
@@ -72,6 +80,7 @@ export const useGraphEvents = ({
             transitionFnRef.current = createCameraTransition(camera, controls, camTarget, mesh.position, transitionDurationMs);
         }
     };
+
 
     const onDoubleClick = (event: MouseEvent) => {
         const rect = (event.target as HTMLElement).getBoundingClientRect();
