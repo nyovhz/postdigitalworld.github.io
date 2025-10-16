@@ -1,30 +1,45 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { useNodesAndEdges, getOppositeNormalFromEdge } from "./useNodesAndEdges";
+import { useNodesAndEdges } from "./useNodesAndEdges";
 import { useSceneSetup } from "./useSceneSetup";
-import { transitionCamera } from "./useCameraTransition";
+import { useGraphEvents, getOppositeNormalFromEdge } from "./useGraphEvents";
+import { setupPostProcessing } from "./usePostProcessing";
+import { NodeInfoPanels } from "./nodeInfoPanels";
 
 export default function Graph3D() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<number | null>(null);
   const [cameraTransitioning, setCameraTransitioning] = useState(false);
   const [screenPos, setScreenPos] = useState<{ x: number; y: number } | null>(null);
+  const [boxSize, setBoxSize] = useState<number>(500);
   const [infoOpacity, setInfoOpacity] = useState(0);
   const [infoVisible, setInfoVisible] = useState(false);
 
   const selectedNodeRef = useRef<number | null>(null);
   const nodeMeshesRef = useRef<THREE.Mesh[]>([]);
+  const transitionFnRef = useRef<((now: number) => boolean) | null>(null);
+
+  const baseBoxSize = 700;
+  const baseGap = 400;
+  const baseFontSize = 90;
 
   useEffect(() => {
     if (!mountRef.current) return;
 
     const cameraDistance = 1;
-    const cameraOffsetBack = 7;
+    const cameraOffsetBack = 6;
     const transitionDurationMs = 800;
 
-    const { scene, camera, renderer, controls } = useSceneSetup(mountRef)!;
-    const { nodes, nodeMeshes, edges, simplex } = useNodesAndEdges(10, 8, 0.35);
+    const { scene, camera, renderer, controls, InitialCameraPos } = useSceneSetup(mountRef)!;
+    const { nodes, nodeMeshes, edges, simplex } = useNodesAndEdges(8, 0.35);
+    const composer = setupPostProcessing(renderer, scene, camera, {
+      fxaa: true,
+      motionBlur: true,
+      film: true,
+      filmIntensity: 0.5,
+      gammaCorrection: true,
+    });
 
     nodeMeshesRef.current = nodeMeshes;
     nodeMeshes.forEach((m) => scene.add(m));
@@ -44,81 +59,31 @@ export default function Graph3D() {
         )
     );
 
-    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    const { onClick, onDoubleClick, onMouseMove } = useGraphEvents({
+      camera,
+      controls,
+      nodeMeshes: nodeMeshesRef.current,
+      raycaster,
+      mouse,
+      centerGlobal,
+      InitialCameraPos,
+      cameraDistance,
+      cameraOffsetBack,
+      transitionDurationMs,
+      selectedNodeRef,
+      setSelectedNode,
+      setCameraTransitioning,
+      setInfoVisible,
+      setInfoOpacity,
+      transitionFnRef,
+    });
 
-    // --- Click para seleccionar nodo ---
-    const onClick = async (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(nodeMeshesRef.current);
-
-      if (intersects.length > 0) {
-        const mesh = intersects[0].object as THREE.Mesh;
-        const id = mesh.userData.id as number;
-
-        setInfoOpacity(0);
-        setInfoVisible(false);
-        setSelectedNode(id);
-        selectedNodeRef.current = id;
-        setCameraTransitioning(true);
-
-        nodeMeshesRef.current.forEach((m, i) => {
-          (m.material as THREE.MeshStandardMaterial).color.set(i === id ? 0x797979 : 0x000000);
-        });
-
-        const startPoint = mesh.position
-          .clone()
-          .add(centerGlobal.clone().sub(mesh.position).normalize().multiplyScalar(0.35));
-        const opp = getOppositeNormalFromEdge(startPoint, cameraDistance);
-        const camTarget = startPoint.clone().add(opp.dir.clone().normalize().multiplyScalar(-cameraOffsetBack));
-
-        transitionCamera(camera, controls, camTarget, mesh.position, transitionDurationMs);
-        await sleep(transitionDurationMs);
-
-        setCameraTransitioning(false);
-        setInfoVisible(true);
-        setTimeout(() => setInfoOpacity(1), 20);
-      }
-    };
     renderer.domElement.addEventListener("click", onClick);
-
-    // --- Hover con efecto visual (glow) y cursor ---
-    let hoveredNode: THREE.Mesh | null = null;
-    const onMouseMove = (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(nodeMeshesRef.current);
-
-      if (intersects.length > 0) {
-        const mesh = intersects[0].object as THREE.Mesh;
-        renderer.domElement.style.cursor = "pointer";
-
-        if (hoveredNode !== mesh) {
-          if (hoveredNode) {
-            (hoveredNode.material as THREE.MeshStandardMaterial).emissive.set(0x000000);
-          }
-          hoveredNode = mesh;
-          (mesh.material as THREE.MeshStandardMaterial).emissive.set(0x3333ff); // glow azul suave
-        }
-      } else {
-        if (hoveredNode) {
-          (hoveredNode.material as THREE.MeshStandardMaterial).emissive.set(0x000000);
-          hoveredNode = null;
-        }
-        renderer.domElement.style.cursor = "default";
-      }
-    };
+    renderer.domElement.addEventListener("dblclick", onDoubleClick);
     renderer.domElement.addEventListener("mousemove", onMouseMove);
 
-    // --- Animación principal ---
     const clock = new THREE.Clock();
-    const animate = () => {
+    const animate = (now: number) => {
       const t = clock.getElapsedTime() * 0.2;
 
       nodeMeshes.forEach((mesh, i) => {
@@ -127,7 +92,11 @@ export default function Graph3D() {
           simplex(i, t, 100) * 0.01,
           simplex(i, t, 200) * 0.01
         );
-        mesh.position.add(velocities[i]).add(noise);
+
+        const velocityMultiplier =
+          selectedNodeRef.current === i ? 0.05 : 1; 
+
+        mesh.position.addScaledVector(velocities[i], velocityMultiplier).addScaledVector(noise, velocityMultiplier);
 
         const dir = mesh.position.clone().sub(centerGlobal);
         if (dir.length() > maxRadius) {
@@ -136,6 +105,7 @@ export default function Graph3D() {
         }
       });
 
+
       const minDistance = 0.7;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -143,7 +113,7 @@ export default function Graph3D() {
           const dist = dir.length();
           if (dist < minDistance) {
             const push = dir.normalize().multiplyScalar((minDistance - dist) / 2);
-            nodeMeshes[i].position.add(push.clone().multiplyScalar(-1));
+            nodeMeshes[i].position.addScaledVector(push, -1);
             nodeMeshes[j].position.add(push);
           }
         }
@@ -169,52 +139,40 @@ export default function Graph3D() {
         }
       }
 
+      if (transitionFnRef.current) {
+        const done = transitionFnRef.current(now);
+        if (done) {
+          transitionFnRef.current = null;
+          setCameraTransitioning(false);
+          setInfoVisible(selectedNodeRef.current !== null);
+          setTimeout(() => setInfoOpacity(1), 20);
+        }
+      }
+
       if (selectedNodeRef.current !== null && !cameraTransitioning) {
         const mesh = nodeMeshes[selectedNodeRef.current];
-
-        // Usa la posición central real
-        const camPos = mesh.position.clone().add(
-          getOppositeNormalFromEdge(mesh.position, cameraDistance).dir.clone().multiplyScalar(-cameraOffsetBack)
-        );
-
-        camera.position.lerp(camPos, 0.05);
-        controls.target.lerp(mesh.position, 0.05);
-        camera.lookAt(mesh.position);
-
-        // Proyectar la posición real del nodo
         const vector = mesh.position.clone().project(camera);
         const screenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
         const screenY = ((1 - (vector.y + 1) / 2)) * renderer.domElement.clientHeight;
         setScreenPos({ x: screenX, y: screenY });
+
+        const distToCamera = mesh.position.distanceTo(camera.position);
+        const scaledSize = baseBoxSize / distToCamera;
+        setBoxSize(scaledSize);
       }
 
-
       controls.update();
-      renderer.render(scene, camera);
+      composer.render();
       requestAnimationFrame(animate);
     };
-    animate();
+    requestAnimationFrame(animate);
 
-    // cleanup
     return () => {
       renderer.domElement.removeEventListener("click", onClick);
       renderer.domElement.removeEventListener("mousemove", onMouseMove);
       mountRef.current?.removeChild(renderer.domElement);
     };
   }, []);
-
-  useEffect(() => {
-    if (cameraTransitioning) {
-      setInfoOpacity(0);
-    } else {
-      if (infoVisible) {
-        const to = setTimeout(() => setInfoOpacity(1), 20);
-        return () => clearTimeout(to);
-      } else {
-        setInfoOpacity(0);
-      }
-    }
-  }, [cameraTransitioning, infoVisible]);
 
   return (
     <div
@@ -231,58 +189,21 @@ export default function Graph3D() {
         const mesh = nodeMeshesRef.current[selectedNode];
         if (!mesh) return null;
 
-        const boxSize = 100;
-        const gap = 60;
-
         return (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                left: screenPos.x - boxSize / 2,
-                top: screenPos.y - boxSize / 2,
-                width: boxSize,
-                height: boxSize,
-                border: "2px solid blue",
-                pointerEvents: "none",
-                opacity: infoOpacity,
-                transition: "opacity 0.6s ease-in-out",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: screenPos.x + gap,
-                top: screenPos.y - boxSize / 2,
-                width: boxSize,
-                height: boxSize,
-                color: "white",
-                background: "rgba(0,0,0,0.7)",
-                padding: "8px",
-                borderRadius: "6px",
-                fontSize: "13px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                pointerEvents: "none",
-                opacity: infoOpacity,
-                transition: "opacity 0.6s ease-in-out",
-              }}
-            >
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", textAlign: "left" }}>
-                <li><strong>ID:</strong> {mesh.userData.id}</li>
-                <li><strong>Name:</strong> {mesh.userData.name ?? "N/A"}</li>
-                <li style={{ marginTop: 6 }}>
-                  x: {mesh.position.x.toFixed(2)}<br />
-                  y: {mesh.position.y.toFixed(2)}<br />
-                  z: {mesh.position.z.toFixed(2)}
-                </li>
-              </ul>
-            </div>
-          </>
+          <NodeInfoPanels
+            mesh={mesh}
+            screenPos={screenPos}
+            boxSize={boxSize}
+            baseBoxSize={baseBoxSize}
+            baseGap={baseGap}
+            baseFontSize={baseFontSize}
+            infoOpacity={infoOpacity}
+            infoVisible={infoVisible}
+          />
         );
       })()}
+
     </div>
+
   );
 }
