@@ -73,7 +73,7 @@ export const useGraphEvents = ({
           m.material = i === id ? selectedMaterial : baseMaterial;
         });
         scanTimeout = null;
-      }, 3000);
+      }, 2000);
 
       const startPoint = mesh.position
         .clone()

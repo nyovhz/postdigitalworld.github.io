@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useNodesAndEdges } from "./useNodesAndEdges";
 import { useSceneSetup } from "./useSceneSetup";
-import { useGraphEvents, getOppositeNormalFromEdge } from "./useGraphEvents";
+import { useGraphEvents } from "./useGraphEvents";
 import { setupPostProcessing } from "./usePostProcessing";
 import { NodeInfoPanels } from "./nodeInfoPanels";
 import { scanMaterial } from "./materials";
@@ -29,15 +29,16 @@ export default function Graph3D() {
     if (!mountRef.current) return;
 
     const cameraDistance = 1;
-    const cameraOffsetBack = 6;
+    const cameraOffsetBack = 5;
     const transitionDurationMs = 800;
+    const nodeSizeRelation = 0.35;
 
     const { scene, camera, renderer, controls, InitialCameraPos } = useSceneSetup(mountRef)!;
-    const { nodes, nodeMeshes, edges, simplex } = useNodesAndEdges(8, 0.35);
+    const { nodes, nodeMeshes, edges, simplex, orbiters } = useNodesAndEdges(8, nodeSizeRelation);
     const { composer, bokehPass } = setupPostProcessing(renderer, scene, camera, {
       depthOfField: true,
-      focus: 6,
-      maxblur: 0.018,
+      focus: 4,
+      maxblur: 0.016,
       aperture: 0.001,
       fxaa: true,
       motionBlur: true,
@@ -84,6 +85,16 @@ export default function Graph3D() {
       bokehPass,
     });
 
+    window.addEventListener("resize", () => {
+      if (!mountRef.current) return;
+      const width = mountRef.current.clientWidth;
+      const height = mountRef.current.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+
     renderer.domElement.addEventListener("click", onClick);
     renderer.domElement.addEventListener("dblclick", onDoubleClick);
     renderer.domElement.addEventListener("mousemove", onMouseMove);
@@ -94,23 +105,29 @@ export default function Graph3D() {
       const t = clock.getElapsedTime() * 0.2;
       scanMaterial.uniforms.time.value = performance.now() / 1000;
 
+      // Actualizar nodos
       nodeMeshes.forEach((mesh, i) => {
         const noise = new THREE.Vector3(
           simplex(i, t, 0) * 0.01,
           simplex(i, t, 100) * 0.01,
           simplex(i, t, 200) * 0.01
         );
-
-        const velocityMultiplier = selectedNodeRef.current === i ? 0.05 : 1;
-        mesh.position.addScaledVector(velocities[i], velocityMultiplier).addScaledVector(noise, velocityMultiplier);
-
-        const dir = mesh.position.clone().sub(centerGlobal);
-        if (dir.length() > maxRadius) {
-          velocities[i].multiplyScalar(-1);
-          mesh.position.copy(centerGlobal.clone().add(dir.normalize().multiplyScalar(maxRadius)));
-        }
+        const noiseMultiplier = selectedNodeRef.current === i ? 0.05 : 1;
+        mesh.position.addScaledVector(noise, noiseMultiplier);
       });
 
+      // Actualizar orbiters
+      orbiters.forEach((orb) => {
+        orb.angle += orb.speed;
+        orb.mesh.position.set(
+          orb.radius * Math.cos(orb.angle),
+          0,
+          orb.radius * Math.sin(orb.angle)
+        );
+      });
+
+
+      // Separación mínima
       const minDistance = 0.7;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -124,6 +141,7 @@ export default function Graph3D() {
         }
       }
 
+      // Actualizar líneas
       const centerOfMass = new THREE.Vector3();
       nodeMeshes.forEach((m) => centerOfMass.add(m.position));
       centerOfMass.divideScalar(nodeMeshes.length);
@@ -144,6 +162,7 @@ export default function Graph3D() {
         }
       }
 
+      // Actualizar cámara, bokeh y info panels
       if (transitionFnRef.current) {
         const done = transitionFnRef.current(now);
         if (done) {
@@ -158,7 +177,7 @@ export default function Graph3D() {
         const focusUniform = bokehPass.materialBokeh.uniforms["focus"];
         const maxBlurUniform = bokehPass.materialBokeh.uniforms["maxblur"];
         const focusLerpSpeed = 0.1;
-        const blurLerpSpeed = 0.05; 
+        const blurLerpSpeed = 0.05;
 
         let targetFocus: number;
         let targetMaxBlur: number;
@@ -167,22 +186,23 @@ export default function Graph3D() {
           const mesh = nodeMeshes[selectedNodeRef.current];
           const dist = camera.position.distanceTo(mesh.position);
           targetFocus = dist;
-          targetMaxBlur = 0.01;
+          targetMaxBlur = 0.005;
 
           const vector = mesh.position.clone().project(camera);
           const screenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
           const screenY = ((1 - (vector.y + 1) / 2)) * renderer.domElement.clientHeight;
           setScreenPos({ x: screenX, y: screenY });
 
-          const scaledSize = baseBoxSize / dist;
+          const fovRad = (camera.fov * Math.PI) / 180;
+          const projectedHeight = 2 * dist * Math.tan(fovRad / 2);
+          const visibleRatio = nodeSizeRelation * 2 / projectedHeight;
+          const scaledSize = visibleRatio * renderer.domElement.clientHeight;
           setBoxSize(scaledSize);
-
         } else {
-          targetFocus = camera.position.distanceTo(centerGlobal); 
+          targetFocus = camera.position.distanceTo(centerGlobal);
           targetMaxBlur = 0;
         }
 
-        // Lerp suave
         focusUniform.value = THREE.MathUtils.lerp(focusUniform.value, targetFocus, focusLerpSpeed);
         maxBlurUniform.value = THREE.MathUtils.lerp(maxBlurUniform.value, targetMaxBlur, blurLerpSpeed);
       }

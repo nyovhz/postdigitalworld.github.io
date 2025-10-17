@@ -33,7 +33,7 @@ export const NodeInfoPanels: React.FC<NodeInfoPanelsProps> = ({
       setShowContent(true);
       const timerFade = setTimeout(() => setFadeIn(true), 50);
       return () => clearTimeout(timerFade);
-    }, 2000);
+    }, 1000);
     return () => clearTimeout(timerTracking);
   }, [mesh]);
 
@@ -115,7 +115,7 @@ export const NodeInfoPanels: React.FC<NodeInfoPanelsProps> = ({
             textAlign: "center",
           }}
         >
-          <TypewriterText text="analyzing..." speed={30} />
+          <TypewriterText text="scanning..." speed={30} />
           <div style={spinnerStyle}></div>
         </div>
       )}
@@ -199,31 +199,33 @@ export const NodeInfoPanels: React.FC<NodeInfoPanelsProps> = ({
             style={{
               position: "absolute",
               left: leftDescription,
-              top: screenPos.y - boxSize + boxSize + scaledGap,
+              top: screenPos.y + boxSize / 1.7, 
               width: totalWidth - boxSize,
-              height: boxSize / 2,
+              minHeight: boxSize / 2,
               color: "white",
-              background: "rgba(64,0,0,0.0)",
+              background: 'transparent',
               padding: `${8 * (boxSize / baseBoxSize)}px`,
               borderRadius: `${6 * (boxSize / baseBoxSize)}px`,
               fontSize: `${scaledFont}px`,
               display: "flex",
               flexDirection: "column",
-              justifyContent: "center",
+              justifyContent: "flex-start",
               alignItems: "center",
               pointerEvents: "none",
               opacity: fadeIn ? infoOpacity : 0,
               transition: "opacity 0.6s ease-in-out",
               textAlign: "center",
+              whiteSpace: "normal",
+              wordWrap: "break-word",
             }}
           >
             <TypewriterText
               text={
                 mesh.userData.description?.trim()
                   ? mesh.userData.description
-                  : "corrupted data"
+                  : "connection refused"
               }
-              speed={50}
+              speed={10}
             />
           </div>
         </>

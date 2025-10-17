@@ -10,18 +10,16 @@ export interface SceneSetup {
   InitialCameraPos: THREE.Vector3;
 }
 
-export const useSceneSetup = (
-  mountRef: React.RefObject<HTMLDivElement>
-): SceneSetup | null => {
+export const useSceneSetup = (mountRef: React.RefObject<HTMLDivElement>): SceneSetup | null => {
   if (!mountRef.current) return null;
 
   const width = mountRef.current.clientWidth;
   const height = mountRef.current.clientHeight;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#0c0c0c");
+  scene.background = new THREE.Color('#252525');
 
-  const InitialCameraPos = new THREE.Vector3(0, 0, 25);
+  const InitialCameraPos = new THREE.Vector3(0, 0, 20);
   const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
   camera.position.copy(InitialCameraPos);
 
@@ -35,7 +33,7 @@ export const useSceneSetup = (
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+  scene.add(new THREE.AmbientLight(0xffffff, 2.35));
 
   const keyLight = new THREE.DirectionalLight(0xffe4cc, 1.5);
   keyLight.position.set(10, 10, 10);
