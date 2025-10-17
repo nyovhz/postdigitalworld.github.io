@@ -2,11 +2,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-/**
- * Crea una transición suave de cámara, pero sin su propio requestAnimationFrame.
- * Devuelve una función que se llama cada frame con el tiempo actual y que
- * actualiza la cámara/controles hasta que termina.
- */
 export const createCameraTransition = (
   camera: THREE.PerspectiveCamera,
   controls: OrbitControls,

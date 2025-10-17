@@ -10,8 +10,8 @@ const trenchFont = localFont({
 });
 
 export const metadata = {
-  title: "post-digital world",
-  description: "Post-digital world",
+  title: "post-digital-world",
+  description: "post-digital-world",
 };
 
 export default function RootLayout({ children }) {

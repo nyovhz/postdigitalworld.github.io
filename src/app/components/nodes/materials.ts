@@ -1,14 +1,35 @@
-// materials.ts
 import * as THREE from "three";
+import { ShaderMaterial } from "three";
 
 export const baseMaterial = new THREE.MeshPhysicalMaterial({
-  color: 0x000000,          // negro
+  color: 0x111111,
   emissive: 0x000000,
-  roughness: 0.2,           // suave pero reflectante
+  roughness: 0.25,
+  metalness: 0.0,
+  clearcoat: 1.0,
+  clearcoatRoughness: 0.05,
+  sheen: 0.0,
+  iridescence: 0.0,
+});
+
+export const selectedMaterial = new THREE.MeshPhysicalMaterial({
+  color: 0x797979,
+  emissive: 0x797979,
+  roughness: 0.1,
+  metalness: 0.0,
+  opacity: 0.3,
+  clearcoat: 1.0,
+  clearcoatRoughness: 0.1,
+});
+
+export const baseMaterial2 = new THREE.MeshPhysicalMaterial({
+  color: 0x000000,
+  emissive: 0x000000,
+  roughness: 0.2,
   metalness: 0.0,
   transparent: true,
   opacity: 0.8,
-  transmission: 0.6,        // algo de refracción
+  transmission: 0.6,
   ior: 1.45,
   thickness: 0.2,
   clearcoat: 0.4,
@@ -16,14 +37,14 @@ export const baseMaterial = new THREE.MeshPhysicalMaterial({
   side: THREE.DoubleSide,
 });
 
-export const selectedMaterial = new THREE.MeshPhysicalMaterial({
-  color: 0xcccccc,      
-  emissive: 0x000000,       
-  roughness: 0.4,         
-  metalness: 1.0,         
-  clearcoat: 0.3,          
-  clearcoatRoughness: 0.1,  
-  reflectivity: 0.1,       
+export const selectedMaterial2 = new THREE.MeshPhysicalMaterial({
+  color: 0xcccccc,
+  emissive: 0x000000,
+  roughness: 0.4,
+  metalness: 1.0,
+  clearcoat: 0.3,
+  clearcoatRoughness: 0.1,
+  reflectivity: 0.1,
   transparent: false,
 });
 
@@ -31,7 +52,7 @@ export const scanMaterial = new THREE.ShaderMaterial({
   uniforms: {
     time: { value: 0 },
     intensity: { value: 0.1 },
-    glitchStrength: { value: 0.05 }, // controla cuánto se desplazan las líneas
+    glitchStrength: { value: 0.05 },
   },
   vertexShader: `
     varying vec3 vPos;
@@ -50,29 +71,18 @@ export const scanMaterial = new THREE.ShaderMaterial({
     varying vec3 vPos;
     varying vec3 vNormal;
 
-    // Función para generar líneas de escaneo tipo gaussiana
     float scanLine(float y, float time) {
-      float pos = fract(y * 20.0 + time * 2.0); // frecuencia vertical
-      return exp(-pow(pos - 0.5, 2.0) * 100.0); // ventana gaussiana
+      float pos = fract(y * 3.0 + time * 2.0);
+      return exp(-pow(pos - 0.5, 2.0) * 10.0);
     }
 
     void main() {
-      // Líneas base
       float scan = scanLine(vPos.y, time);
-
-      // Pulso global
       float pulse = 0.5 + 0.5 * sin(time * 2.0);
-
-      // Brillo angular tipo holograma
       float fresnel = pow(1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0))), 3.0);
-
-      // Efecto glitch horizontal sutil
       float glitch = sin(vPos.y * 50.0 + time * 20.0) * glitchStrength;
-
       float glow = (scan + fresnel + glitch) * pulse * intensity;
-
       vec3 color = vec3(glow);
-
       gl_FragColor = vec4(color, 0.85);
     }
   `,
@@ -81,13 +91,6 @@ export const scanMaterial = new THREE.ShaderMaterial({
   depthWrite: false,
   side: THREE.DoubleSide,
 });
-
-
-
-
-
-
-
 
 export const hoverMaterial = new THREE.MeshStandardMaterial({
   color: 0x000000,

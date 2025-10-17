@@ -54,7 +54,6 @@ export const useNodesAndEdges = (
     nodeMeshes.push(mesh);
   }
 
-  // --- Crear edges (puedes cambiar lógica según tus relaciones reales) ---
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const startNode = nodes[i];

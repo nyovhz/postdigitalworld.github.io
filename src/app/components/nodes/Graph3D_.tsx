@@ -34,11 +34,15 @@ export default function Graph3D() {
 
     const { scene, camera, renderer, controls, InitialCameraPos } = useSceneSetup(mountRef)!;
     const { nodes, nodeMeshes, edges, simplex } = useNodesAndEdges(8, 0.35);
-    const composer = setupPostProcessing(renderer, scene, camera, {
+    const { composer, bokehPass } = setupPostProcessing(renderer, scene, camera, {
+      depthOfField: true,
+      focus: 6,
+      maxblur: 0.018,
+      aperture: 0.001,
       fxaa: true,
       motionBlur: true,
       film: true,
-      filmIntensity: 0.8,
+      filmIntensity: 0.3,
       gammaCorrection: true,
     });
 
@@ -77,6 +81,7 @@ export default function Graph3D() {
       setInfoVisible,
       setInfoOpacity,
       transitionFnRef,
+      bokehPass,
     });
 
     renderer.domElement.addEventListener("click", onClick);
@@ -84,6 +89,7 @@ export default function Graph3D() {
     renderer.domElement.addEventListener("mousemove", onMouseMove);
 
     const clock = new THREE.Clock();
+
     const animate = (now: number) => {
       const t = clock.getElapsedTime() * 0.2;
       scanMaterial.uniforms.time.value = performance.now() / 1000;
@@ -95,9 +101,7 @@ export default function Graph3D() {
           simplex(i, t, 200) * 0.01
         );
 
-        const velocityMultiplier =
-          selectedNodeRef.current === i ? 0.05 : 1; 
-
+        const velocityMultiplier = selectedNodeRef.current === i ? 0.05 : 1;
         mesh.position.addScaledVector(velocities[i], velocityMultiplier).addScaledVector(noise, velocityMultiplier);
 
         const dir = mesh.position.clone().sub(centerGlobal);
@@ -106,7 +110,6 @@ export default function Graph3D() {
           mesh.position.copy(centerGlobal.clone().add(dir.normalize().multiplyScalar(maxRadius)));
         }
       });
-
 
       const minDistance = 0.7;
       for (let i = 0; i < nodes.length; i++) {
@@ -151,22 +154,44 @@ export default function Graph3D() {
         }
       }
 
-      if (selectedNodeRef.current !== null && !cameraTransitioning) {
-        const mesh = nodeMeshes[selectedNodeRef.current];
-        const vector = mesh.position.clone().project(camera);
-        const screenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
-        const screenY = ((1 - (vector.y + 1) / 2)) * renderer.domElement.clientHeight;
-        setScreenPos({ x: screenX, y: screenY });
+      if (bokehPass) {
+        const focusUniform = bokehPass.materialBokeh.uniforms["focus"];
+        const maxBlurUniform = bokehPass.materialBokeh.uniforms["maxblur"];
+        const focusLerpSpeed = 0.1;
+        const blurLerpSpeed = 0.05; 
 
-        const distToCamera = mesh.position.distanceTo(camera.position);
-        const scaledSize = baseBoxSize / distToCamera;
-        setBoxSize(scaledSize);
+        let targetFocus: number;
+        let targetMaxBlur: number;
+
+        if (selectedNodeRef.current !== null) {
+          const mesh = nodeMeshes[selectedNodeRef.current];
+          const dist = camera.position.distanceTo(mesh.position);
+          targetFocus = dist;
+          targetMaxBlur = 0.01;
+
+          const vector = mesh.position.clone().project(camera);
+          const screenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
+          const screenY = ((1 - (vector.y + 1) / 2)) * renderer.domElement.clientHeight;
+          setScreenPos({ x: screenX, y: screenY });
+
+          const scaledSize = baseBoxSize / dist;
+          setBoxSize(scaledSize);
+
+        } else {
+          targetFocus = camera.position.distanceTo(centerGlobal); 
+          targetMaxBlur = 0;
+        }
+
+        // Lerp suave
+        focusUniform.value = THREE.MathUtils.lerp(focusUniform.value, targetFocus, focusLerpSpeed);
+        maxBlurUniform.value = THREE.MathUtils.lerp(maxBlurUniform.value, targetMaxBlur, blurLerpSpeed);
       }
 
       controls.update();
       composer.render();
       requestAnimationFrame(animate);
     };
+
     requestAnimationFrame(animate);
 
     return () => {
@@ -190,7 +215,6 @@ export default function Graph3D() {
       {selectedNode !== null && screenPos && infoVisible && (() => {
         const mesh = nodeMeshesRef.current[selectedNode];
         if (!mesh) return null;
-
         return (
           <NodeInfoPanels
             mesh={mesh}
@@ -204,8 +228,6 @@ export default function Graph3D() {
           />
         );
       })()}
-
     </div>
-
   );
 }

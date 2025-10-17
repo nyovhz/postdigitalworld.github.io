@@ -11,7 +11,6 @@ const ThreePathTunnelVertices = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // --- Setup básico ---
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
@@ -30,7 +29,6 @@ const ThreePathTunnelVertices = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 1);
 
-    // --- Túnel base (misma geometría) ---
     const pathPoints = [];
     const segments = 30;
     const radiusMain = 20;
@@ -54,7 +52,6 @@ const ThreePathTunnelVertices = () => {
     const curveSegments = 200;
     const geometry = new THREE.TubeGeometry(path, curveSegments, radiusTube, 12, true);
 
-    // --- Material de puntos (solo vértices visibles) ---
     const vertexShader = `
       uniform float uTime;
       uniform float uLow;

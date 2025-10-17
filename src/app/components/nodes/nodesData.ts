@@ -12,7 +12,7 @@ export const nodesData: NodeData[] = [
     id: 0,
     name: "x317962",
     link: "/x317962",
-    description: "New Music from MX"
+    description: "This compilation uncovers rare tracks from Mexico that defy genres and reveal the country’s weird, wonderful sonic landscape."
   },
   {
     id: 1,
@@ -26,7 +26,7 @@ export const nodesData: NodeData[] = [
     link: null,
     description: ""
   },
-    {
+  {
     id: 3,
     name: "x",
     link: null,
@@ -38,7 +38,7 @@ export const nodesData: NodeData[] = [
     link: null,
     description: ""
   },
-    {
+  {
     id: 5,
     name: "x",
     link: null,
@@ -50,7 +50,7 @@ export const nodesData: NodeData[] = [
     link: null,
     description: ""
   },
-      {
+  {
     id: 7,
     name: "x",
     link: null,
@@ -62,7 +62,7 @@ export const nodesData: NodeData[] = [
     link: null,
     description: ""
   },
-    {
+  {
     id: 9,
     name: "x",
     link: null,
