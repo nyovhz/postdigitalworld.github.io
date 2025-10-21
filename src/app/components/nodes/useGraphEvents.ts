@@ -52,7 +52,7 @@ export const useGraphEvents = ({
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(nodeMeshes);
+    const intersects = raycaster.intersectObjects(nodeMeshes, false);
     if (intersects.length > 0) {
       const mesh = intersects[0].object as THREE.Mesh;
       const id = mesh.userData.id as number;
@@ -91,7 +91,7 @@ export const useGraphEvents = ({
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(nodeMeshes);
+    const intersects = raycaster.intersectObjects(nodeMeshes, false);
     if (intersects.length === 0) {
       setInfoVisible(false);
       setInfoOpacity(0);
@@ -117,7 +117,7 @@ export const useGraphEvents = ({
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(nodeMeshes);
+    const intersects = raycaster.intersectObjects(nodeMeshes, false);
     if (intersects.length > 0) {
       const mesh = intersects[0].object as THREE.Mesh;
       (event.target as HTMLElement).style.cursor = "pointer";

@@ -93,17 +93,14 @@ export const scanMaterial = new THREE.ShaderMaterial({
 });
 
 export const hoverMaterial = new THREE.MeshStandardMaterial({
-  color: 0x000000,
+  color: 0x3333ff,
   emissive: 0x3333ff,
   roughness: 0.5,
-  metalness: 0.0,
+  metalness: 0.5,
 });
 
 export const orbiterMaterial = new THREE.MeshStandardMaterial({
-  color: 0x00ff00,       // verde
-  transparent: true,     
-  opacity: 0.4,          // translucidez
-  metalness: 0.1,        // ligera reflexión metálica
-  roughness: 0.2,        // superficie un poco suave
-  side: THREE.DoubleSide, // opcional, si quieres que sea visible desde dentro
+  color: 0x0000FF,
+  roughness: 0.5,
+  metalness: 0.5,
 });

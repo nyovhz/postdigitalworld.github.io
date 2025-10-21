@@ -36,7 +36,7 @@ export default function Graph3D() {
     const { scene, camera, renderer, controls, InitialCameraPos } = useSceneSetup(mountRef)!;
     const { nodes, nodeMeshes, edges, simplex, orbiters } = useNodesAndEdges(8, nodeSizeRelation);
     const { composer, bokehPass } = setupPostProcessing(renderer, scene, camera, {
-      depthOfField: true,
+      depthOfField: false,
       focus: 4,
       maxblur: 0.016,
       aperture: 0.001,
@@ -173,39 +173,41 @@ export default function Graph3D() {
         }
       }
 
+      let screenX = 0;
+      let screenY = 0;
+      let scaledSize = boxSize;
+
+      if (selectedNodeRef.current !== null) {
+        const mesh = nodeMeshes[selectedNodeRef.current];
+        const dist = camera.position.distanceTo(mesh.position);
+
+        const vector = mesh.position.clone().project(camera);
+        screenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
+        screenY = ((1 - (vector.y + 1) / 2)) * renderer.domElement.clientHeight;
+        setScreenPos({ x: screenX, y: screenY });
+
+        const fovRad = (camera.fov * Math.PI) / 180;
+        const projectedHeight = 2 * dist * Math.tan(fovRad / 2);
+        const visibleRatio = nodeSizeRelation * 2 / projectedHeight;
+        scaledSize = visibleRatio * renderer.domElement.clientHeight;
+        setBoxSize(scaledSize);
+      }
+
       if (bokehPass) {
         const focusUniform = bokehPass.materialBokeh.uniforms["focus"];
         const maxBlurUniform = bokehPass.materialBokeh.uniforms["maxblur"];
         const focusLerpSpeed = 0.1;
         const blurLerpSpeed = 0.05;
 
-        let targetFocus: number;
-        let targetMaxBlur: number;
-
-        if (selectedNodeRef.current !== null) {
-          const mesh = nodeMeshes[selectedNodeRef.current];
-          const dist = camera.position.distanceTo(mesh.position);
-          targetFocus = dist;
-          targetMaxBlur = 0.005;
-
-          const vector = mesh.position.clone().project(camera);
-          const screenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
-          const screenY = ((1 - (vector.y + 1) / 2)) * renderer.domElement.clientHeight;
-          setScreenPos({ x: screenX, y: screenY });
-
-          const fovRad = (camera.fov * Math.PI) / 180;
-          const projectedHeight = 2 * dist * Math.tan(fovRad / 2);
-          const visibleRatio = nodeSizeRelation * 2 / projectedHeight;
-          const scaledSize = visibleRatio * renderer.domElement.clientHeight;
-          setBoxSize(scaledSize);
-        } else {
-          targetFocus = camera.position.distanceTo(centerGlobal);
-          targetMaxBlur = 0;
-        }
+        let targetFocus = selectedNodeRef.current !== null
+          ? camera.position.distanceTo(nodeMeshes[selectedNodeRef.current].position)
+          : camera.position.distanceTo(centerGlobal);
+        let targetMaxBlur = selectedNodeRef.current !== null ? 0.005 : 0;
 
         focusUniform.value = THREE.MathUtils.lerp(focusUniform.value, targetFocus, focusLerpSpeed);
         maxBlurUniform.value = THREE.MathUtils.lerp(maxBlurUniform.value, targetMaxBlur, blurLerpSpeed);
       }
+
 
       controls.update();
       composer.render();

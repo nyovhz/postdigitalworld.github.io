@@ -61,22 +61,19 @@ export const useNodesAndEdges = (placementRadius: number, nodeRadius: number) =>
     mesh.receiveShadow = true;
     nodeMeshes.push(mesh);
 
-    // Orbiter solo si el nodo tiene link
     if (data.link) {
       const orbiterMesh = new THREE.Mesh(orbiterGeometry, orbiterMaterial);
       const radius = nodeRadius + Math.random() * 0.1;
       const speed = 0.01 + Math.random() * 0.01;
       const angle = Math.random() * Math.PI * 2;
 
-      // Posición inicial a un lado
       orbiterMesh.position.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
-      mesh.add(orbiterMesh); // hijo del nodo
+      mesh.add(orbiterMesh); 
 
       orbiters.push({ mesh: orbiterMesh, node, radius, speed, angle });
     }
   }
 
-  // Conexiones entre nodos
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const startNode = nodes[i];

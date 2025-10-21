@@ -17,7 +17,7 @@ export const useSceneSetup = (mountRef: React.RefObject<HTMLDivElement>): SceneS
   const height = mountRef.current.clientHeight;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#252525');
+  scene.background = new THREE.Color('#181818');
 
   const InitialCameraPos = new THREE.Vector3(0, 0, 20);
   const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
@@ -60,14 +60,6 @@ export const useSceneSetup = (mountRef: React.RefObject<HTMLDivElement>): SceneS
   const bottomLight = new THREE.PointLight(0x6699ff, 0.3);
   bottomLight.position.set(0, -10, 10);
   scene.add(bottomLight);
-
-  const planeGeometry = new THREE.PlaneGeometry(200, 200);
-  const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
-  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.y = -5;
-  plane.receiveShadow = true;
-  scene.add(plane);
 
   return { scene, camera, renderer, controls, InitialCameraPos };
 };
