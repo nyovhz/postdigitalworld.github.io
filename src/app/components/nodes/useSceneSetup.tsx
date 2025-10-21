@@ -46,7 +46,7 @@ export const useSceneSetup = (mountRef: React.RefObject<HTMLDivElement>): SceneS
 
   const fillLight = new THREE.DirectionalLight(0x99ccff, 0.8);
   fillLight.position.set(-10, 5, 5);
-  scene.add(fillLight);
+  //scene.add(fillLight);
 
   const rimLight = new THREE.SpotLight(0xffffff, 1.2);
   rimLight.position.set(0, 10, -15);
@@ -55,11 +55,11 @@ export const useSceneSetup = (mountRef: React.RefObject<HTMLDivElement>): SceneS
   rimLight.decay = 2;
   rimLight.distance = 60;
   rimLight.castShadow = true;
-  scene.add(rimLight);
+  //scene.add(rimLight);
 
   const bottomLight = new THREE.PointLight(0x6699ff, 0.3);
   bottomLight.position.set(0, -10, 10);
-  scene.add(bottomLight);
+  //scene.add(bottomLight);
 
   return { scene, camera, renderer, controls, InitialCameraPos };
 };

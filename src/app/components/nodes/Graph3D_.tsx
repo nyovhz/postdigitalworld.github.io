@@ -40,11 +40,11 @@ export default function Graph3D() {
       focus: 4,
       maxblur: 0.016,
       aperture: 0.001,
-      fxaa: true,
-      motionBlur: true,
-      film: true,
+      fxaa: false,
+      motionBlur: false,
+      film: false,
       filmIntensity: 0.3,
-      gammaCorrection: true,
+      gammaCorrection: false,
     });
 
     nodeMeshesRef.current = nodeMeshes;
@@ -210,7 +210,8 @@ export default function Graph3D() {
 
 
       controls.update();
-      composer.render();
+      //composer.render();
+      renderer.render(scene,camera);
       requestAnimationFrame(animate);
     };
 
