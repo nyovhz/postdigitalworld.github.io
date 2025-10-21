@@ -36,7 +36,7 @@ export default function Graph3D() {
     const { scene, camera, renderer, controls, InitialCameraPos } = useSceneSetup(mountRef)!;
     const { nodes, nodeMeshes, edges, simplex, orbiters } = useNodesAndEdges(8, nodeSizeRelation);
     const { composer, bokehPass } = setupPostProcessing(renderer, scene, camera, {
-      depthOfField: false,
+      depthOfField: true,
       focus: 4,
       maxblur: 0.016,
       aperture: 0.001,
@@ -44,7 +44,7 @@ export default function Graph3D() {
       motionBlur: false,
       film: false,
       filmIntensity: 0.3,
-      gammaCorrection: false,
+      gammaCorrection: true,
     });
 
     nodeMeshesRef.current = nodeMeshes;
@@ -54,7 +54,7 @@ export default function Graph3D() {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     const centerGlobal = new THREE.Vector3(0, 0, 0);
-    const maxRadius = 6;
+    const maxRadius = 3;
 
     const velocities = nodes.map(
       () =>
@@ -141,6 +141,15 @@ export default function Graph3D() {
         }
       }
 
+      nodeMeshes.forEach((mesh) => {
+        const dir = mesh.position.clone().sub(centerGlobal);
+        const dist = dir.length();
+        if (dist > maxRadius) {
+          mesh.position.copy(centerGlobal.clone().addScaledVector(dir.normalize(), maxRadius));
+        }
+      });
+
+
       // Actualizar líneas
       const centerOfMass = new THREE.Vector3();
       nodeMeshes.forEach((m) => centerOfMass.add(m.position));
@@ -210,8 +219,8 @@ export default function Graph3D() {
 
 
       controls.update();
-      //composer.render();
-      renderer.render(scene,camera);
+      composer.render();
+      //renderer.render(scene, camera);
       requestAnimationFrame(animate);
     };
 
