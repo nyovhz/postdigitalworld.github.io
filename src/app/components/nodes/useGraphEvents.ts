@@ -1,8 +1,8 @@
-// useGraphEvents.ts
 import * as THREE from "three";
 import { createCameraTransition } from "./useCameraTransition";
-import { baseMaterial, selectedMaterial, hoverMaterial, scanMaterial } from "./materials";
+import { baseMaterial, hoverMaterial } from "./materials";
 import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass";
+import { handleNodeSelection } from "./handleNodeSelection";
 
 type UseGraphEventsParams = {
   camera: THREE.PerspectiveCamera;
@@ -21,6 +21,7 @@ type UseGraphEventsParams = {
   setInfoVisible: (b: boolean) => void;
   setInfoOpacity: (b: number) => void;
   transitionFnRef: React.MutableRefObject<((now: number) => boolean) | null>;
+  scanTimeoutRef?: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
   bokehPass?: BokehPass;
 };
 
@@ -41,10 +42,9 @@ export const useGraphEvents = ({
   setInfoVisible,
   setInfoOpacity,
   transitionFnRef,
-  bokehPass,
+  scanTimeoutRef,
 }: UseGraphEventsParams) => {
   let hoveredNode: THREE.Mesh | null = null;
-  let scanTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const onClick = (event: MouseEvent) => {
     const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -57,31 +57,22 @@ export const useGraphEvents = ({
       const mesh = intersects[0].object as THREE.Mesh;
       const id = mesh.userData.id as number;
 
-      setInfoOpacity(0);
-      setInfoVisible(false);
-      setSelectedNode(id);
-      selectedNodeRef.current = id;
-      setCameraTransitioning(true);
-
-      nodeMeshes.forEach((m, i) => {
-        m.material = i === id ? scanMaterial : baseMaterial;
+      handleNodeSelection(id, {
+        nodeMeshes,
+        camera,
+        controls,
+        centerGlobal,
+        cameraDistance,
+        cameraOffsetBack,
+        transitionDurationMs,
+        selectedNodeRef,
+        setSelectedNode,
+        setCameraTransitioning,
+        setInfoVisible,
+        setInfoOpacity,
+        transitionFnRef,
+        scanTimeoutRef,
       });
-
-      if (scanTimeout) clearTimeout(scanTimeout);
-      scanTimeout = setTimeout(() => {
-        nodeMeshes.forEach((m, i) => {
-          m.material = i === id ? selectedMaterial : baseMaterial;
-        });
-        scanTimeout = null;
-      }, 2000);
-
-      const startPoint = mesh.position
-        .clone()
-        .add(centerGlobal.clone().sub(mesh.position).normalize().multiplyScalar(0.35));
-      const opp = getOppositeNormalFromEdge(startPoint, cameraDistance);
-      const camTarget = startPoint.clone().add(opp.dir.clone().normalize().multiplyScalar(-cameraOffsetBack));
-
-      transitionFnRef.current = createCameraTransition(camera, controls, camTarget, mesh.position, transitionDurationMs);
     }
   };
 
@@ -97,16 +88,21 @@ export const useGraphEvents = ({
       setInfoOpacity(0);
 
       nodeMeshes.forEach((m) => (m.material = baseMaterial));
-
       setSelectedNode(null);
       selectedNodeRef.current = null;
-
       setCameraTransitioning(true);
-      transitionFnRef.current = createCameraTransition(camera, controls, InitialCameraPos, centerGlobal, transitionDurationMs);
 
-      if (scanTimeout) {
-        clearTimeout(scanTimeout);
-        scanTimeout = null;
+      transitionFnRef.current = createCameraTransition(
+        camera,
+        controls,
+        InitialCameraPos,
+        centerGlobal,
+        transitionDurationMs
+      );
+
+      if (scanTimeoutRef?.current) {
+        clearTimeout(scanTimeoutRef.current);
+        scanTimeoutRef.current = null;
       }
     }
   };

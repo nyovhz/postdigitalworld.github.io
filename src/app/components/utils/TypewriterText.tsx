@@ -24,13 +24,18 @@ export default function TypewriterText({ text, speed = 60, className }: Props) {
   useEffect(() => {
     if (!inView || index >= text.length) return;
 
-    const timeout = setTimeout(() => {
+    let animationFrame: number;
+
+    const step = () => {
       setDisplayedText(text.slice(0, index + 1));
       setIndex((prev) => prev + 1);
-    }, speed);
+    };
 
-    return () => clearTimeout(timeout);
-  }, [inView, index, text, speed]);
+    animationFrame = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [inView, index, text]);
+
 
   return (
     <h1 ref={ref} className={className}>

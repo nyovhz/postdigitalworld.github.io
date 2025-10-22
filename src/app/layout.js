@@ -20,9 +20,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${trenchFont.variable} antialiased select-none`}
       >
-        <AudioProvider>
-          {children}
-        </AudioProvider>
+          <AudioProvider>
+            {children}
+          </AudioProvider>
       </body>
     </html>
   );

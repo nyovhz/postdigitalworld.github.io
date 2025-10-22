@@ -36,7 +36,7 @@ export interface PostProcessingOptions {
   aperture?: number;
   maxblur?: number;
   glitch?: boolean;
-  glitchMode?: number; // 0 = default, 1 = fuerte, 2 = esporádico
+  glitchMode?: number;
 }
 
 export const setupPostProcessing = (

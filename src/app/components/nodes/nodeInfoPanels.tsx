@@ -1,242 +1,170 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import TypewriterText from "../utils/TypewriterText";
 
 interface NodeInfoPanelsProps {
   mesh: THREE.Mesh;
-  screenPos: { x: number; y: number };
-  boxSize: number;
-  baseBoxSize: number;
-  baseGap: number;
-  baseFontSize: number;
   infoOpacity: number;
   infoVisible: boolean;
 }
 
-export const NodeInfoPanels: React.FC<NodeInfoPanelsProps> = ({
-  mesh,
-  screenPos,
-  boxSize,
-  baseBoxSize,
-  baseGap,
-  baseFontSize,
-  infoOpacity,
-}) => {
-  const [showContent, setShowContent] = useState(false);
-  const [fadeIn, setFadeIn] = useState(false);
+export const NodeInfoPanels = forwardRef<HTMLDivElement, NodeInfoPanelsProps>(
+  ({ mesh, infoOpacity, infoVisible }, ref) => {
+    const [showContent, setShowContent] = useState(false);
+    const hasLink = !!mesh.userData.link;
 
-  useEffect(() => {
-    setShowContent(false);
-    setFadeIn(false);
-    const timerTracking = setTimeout(() => {
-      setShowContent(true);
-      const timerFade = setTimeout(() => setFadeIn(true), 50);
-      return () => clearTimeout(timerFade);
-    }, 1000);
-    return () => clearTimeout(timerTracking);
-  }, [mesh]);
+    useEffect(() => {
+      if (infoVisible) {
+        setShowContent(false);
+        const timer = setTimeout(() => setShowContent(true), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        setShowContent(false);
+      }
+    }, [infoVisible]);
 
-  const scaledGap = baseGap * (boxSize / baseBoxSize);
-  const scaledFont = baseFontSize * (boxSize / baseBoxSize);
-  const hasLink = !!mesh.userData.link;
-  const leftDescription = hasLink
-    ? screenPos.x - scaledGap - boxSize
-    : screenPos.x - boxSize - scaledGap;
-  const leftTracker = screenPos.x - boxSize / 2;
-  const panelCount = 3;
-  const totalWidth = boxSize * panelCount + scaledGap * (panelCount - 1);
-
-  const spinnerStyle: React.CSSProperties = {
-    width: 24,
-    height: 24,
-    border: "4px solid rgba(255,255,255,0.3)",
-    borderTop: "4px solid white",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
-    marginTop: 8,
-  };
-
-  return (
-    <>
+    return (
       <div
+        ref={ref}
         style={{
           position: "absolute",
-          left: screenPos.x - boxSize / 2,
-          top: screenPos.y - boxSize / 2,
-          width: boxSize,
-          height: boxSize,
+          left: 0,
+          top: 0,
+          width: 0,
+          height: 0,
           pointerEvents: "none",
-          opacity: fadeIn ? infoOpacity : 0.6,
-          transition: "opacity 0.6s ease-in-out",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: infoVisible ? infoOpacity : 0,
+          transition: "opacity 0.3s ease-in-out",
         }}
       >
-        {[
-          { top: 0, left: 0, rotate: "0deg" },
-          { top: 0, right: 0, rotate: "45deg" },
-          { bottom: 0, left: 0, rotate: "-45deg" },
-          { bottom: 0, right: 0, rotate: "90deg" },
-        ].map((pos, i) => (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+          }}
+        >
+          {[
+            { top: 0, left: 0, rotate: "0deg" },
+            { top: 0, right: 0, rotate: "45deg" },
+            { bottom: 0, left: 0, rotate: "-45deg" },
+            { bottom: 0, right: 0, rotate: "90deg" },
+          ].map((pos, i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                width: "20%",
+                height: "20%",
+                borderTop: "2px solid #0000FF",
+                borderLeft: "2px solid #0000FF",
+                transform: `rotate(${pos.rotate})`,
+                ...pos,
+              }}
+            />
+          ))}
+        </div>
+
+        {hasLink && showContent &&(
           <div
-            key={i}
             style={{
               position: "absolute",
-              width: boxSize * 0.2,
-              height: boxSize * 0.2,
-              borderTop: "2px solid #0000FF",
-              borderLeft: "2px solid #0000FF",
-              transform: `rotate(${pos.rotate})`,
-              ...pos,
+              left: "-100%",
+              top: 0,
+              width: "100%",
+              height: "100%",
+              background: "#0000FF44",
+              color: "white",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              textAlign: "center",
+              pointerEvents: "auto",
+              borderRadius: "100%",
             }}
-          />
-        ))}
-      </div>
+            onClick={() => window.open("nodes" + mesh.userData.link, "_blank")}
+          >
+            open →
+          </div>
+        )}
+        {showContent && (
+<div
+          style={{
+            position: "absolute",
+            right: "-110%",
+            top: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+            <li><strong>ID:</strong> {mesh.userData.id}</li>
+            <li><strong>Name:</strong> {mesh.userData.name ?? "N/A"}</li>
+            <li>
+              x: {mesh.position.x.toFixed(2)}<br />
+              y: {mesh.position.y.toFixed(2)}<br />
+              z: {mesh.position.z.toFixed(2)}
+            </li>
+          </ul>
+        </div>
+        )}
+        
 
-      {!showContent && (
         <div
           style={{
             position: "absolute",
-            left: leftTracker,
-            top: screenPos.y - boxSize + boxSize + scaledGap,
-            width: boxSize,
-            height: boxSize / 2,
-            color: "white",
-            background: "rgba(64,0,0,0.0)",
-            padding: `${8 * (boxSize / baseBoxSize)}px`,
-            borderRadius: `${6 * (boxSize / baseBoxSize)}px`,
-            fontSize: `${scaledFont}px`,
+            top: "100%",
+            left: "-100%",
+            width: "300%",
+            height: "100%",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
-            pointerEvents: "none",
-            opacity: 1.0,
-            transition: "opacity 0.6s ease-in-out",
             textAlign: "center",
+            whiteSpace: "normal",
+            wordWrap: "break-word",
           }}
         >
-          <TypewriterText text="scanning..." speed={30} />
-          <div style={spinnerStyle}></div>
-        </div>
-      )}
-
-      {showContent && (
-        <>
-          <div
-            style={{
-              position: "absolute",
-              left: screenPos.x + scaledGap,
-              top: screenPos.y - boxSize / 2,
-              width: boxSize,
-              height: boxSize,
-              color: "white",
-              background: "rgba(0,0,0,0.0)",
-              padding: `${8 * (boxSize / baseBoxSize)}px`,
-              borderRadius: `${6 * (boxSize / baseBoxSize)}px`,
-              fontSize: `${scaledFont}px`,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              pointerEvents: "none",
-              opacity: fadeIn ? infoOpacity : 0,
-              transition: "opacity 0.6s ease-in-out",
-            }}
-          >
-            <ul
-              style={{
-                margin: 0,
-                marginLeft: 10,
-                padding: 0,
-                listStyle: "none",
-                textAlign: "left",
-              }}
-            >
-              <li>
-                <strong>ID:</strong> {mesh.userData.id}
-              </li>
-              <li>
-                <strong>Name:</strong> {mesh.userData.name ?? "N/A"}
-              </li>
-              <li style={{ marginTop: `${6 * (boxSize / baseBoxSize)}px` }}>
-                x: {mesh.position.x.toFixed(2)}
-                <br />
-                y: {mesh.position.y.toFixed(2)}
-                <br />
-                z: {mesh.position.z.toFixed(2)}
-              </li>
-            </ul>
-          </div>
-
-          {hasLink && (
-            <div
-              style={{
-                position: "absolute",
-                left: screenPos.x - scaledGap - boxSize,
-                top: screenPos.y - boxSize / 2,
-                width: boxSize,
-                height: boxSize,
-                color: "white",
-                background: "#0000FF44",
-                padding: `${8 * (boxSize / baseBoxSize)}px`,
-                borderRadius: "100%",
-                fontSize: `${scaledFont}px`,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                pointerEvents: "auto",
-                opacity: fadeIn ? infoOpacity : 0,
-                transition: "opacity 0.6s ease-in-out",
-                cursor: "pointer",
-              }}
-              onClick={() => window.open("nodes" + mesh.userData.link, "_blank")}
-            >
-              open →
-            </div>
+          {!showContent && (
+            <div style={{
+              width: 40,
+              height: 40,
+              border: "4px solid #5e5e5eff",
+              borderTop: "4px solid transparent",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite"
+            }} />
           )}
 
-          <div
-            style={{
-              position: "absolute",
-              left: leftDescription,
-              top: screenPos.y + boxSize / 1.7, 
-              width: totalWidth - boxSize,
-              minHeight: boxSize / 2,
-              color: "white",
-              background: 'transparent',
-              padding: `${8 * (boxSize / baseBoxSize)}px`,
-              borderRadius: `${6 * (boxSize / baseBoxSize)}px`,
-              fontSize: `${scaledFont}px`,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              pointerEvents: "none",
-              opacity: fadeIn ? infoOpacity : 0,
-              transition: "opacity 0.6s ease-in-out",
-              textAlign: "center",
-              whiteSpace: "normal",
-              wordWrap: "break-word",
-            }}
-          >
+          {showContent && (
             <TypewriterText
-              text={
-                mesh.userData.description?.trim()
-                  ? mesh.userData.description
-                  : "connection refused"
-              }
-              speed={10}
+              text={mesh.userData.description?.trim() ? mesh.userData.description : "connection refused"}
+              speed={100}
             />
-          </div>
-        </>
-      )}
+          )}
+        </div>
 
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </>
-  );
-};
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+);
+
+NodeInfoPanels.displayName = "NodeInfoPanels";
