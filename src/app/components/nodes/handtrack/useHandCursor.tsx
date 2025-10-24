@@ -6,10 +6,11 @@ export function useHandCursor(
   suggestDistance = 200,
   lerpFactor = 0.08
 ) {
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
-  const [closestNodeIndex, setClosestNodeIndex] = useState<number | null>(null);
+  // 👇 ahora solo "isClicking" necesita causar renders
   const [isClicking, setIsClicking] = useState(false);
-  const smoothCursorRef = useRef({ x: 0, y: 0 });
+
+  const cursorPos = useRef({ x: 0, y: 0 });
+  const closestNodeIndex = useRef<number | null>(null);
 
   const nodePositionsRef = useRef(nodePositions2D);
   nodePositionsRef.current = nodePositions2D;
@@ -29,15 +30,16 @@ export function useHandCursor(
         const targetX = (1 - indexTip.x) * window.innerWidth;
         const targetY = indexTip.y * window.innerHeight;
 
-        smoothCursorRef.current.x += (targetX - smoothCursorRef.current.x) * lerpFactor;
-        smoothCursorRef.current.y += (targetY - smoothCursorRef.current.y) * lerpFactor;
+        // suavizado
+        cursorPos.current.x += (targetX - cursorPos.current.x) * lerpFactor;
+        cursorPos.current.y += (targetY - cursorPos.current.y) * lerpFactor;
 
-        setCursorPos({ ...smoothCursorRef.current });
-
+        // clic (thumb–middle proximity)
         const dx = thumbTip.x - middleTip.x;
         const dy = thumbTip.y - middleTip.y;
         setIsClicking(Math.sqrt(dx * dx + dy * dy) < 0.05);
 
+        // nodo más cercano (sin re-render)
         let closest: number | null = null;
         let minDist = suggestDistance;
         nodes.forEach((node, i) => {
@@ -47,7 +49,9 @@ export function useHandCursor(
             closest = i;
           }
         });
-        setClosestNodeIndex(closest);
+
+        // 🔹 ahora se guarda en ref
+        closestNodeIndex.current = closest;
       }
 
       animationFrame = requestAnimationFrame(updateCursor);

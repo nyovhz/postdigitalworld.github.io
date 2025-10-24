@@ -17,7 +17,7 @@ export const useSceneSetup = (mountRef: React.RefObject<HTMLDivElement>): SceneS
   const height = mountRef.current.clientHeight;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#181818');
+  scene.background = new THREE.Color('#080808');
 
   const InitialCameraPos = new THREE.Vector3(0, 0, 20);
   const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);

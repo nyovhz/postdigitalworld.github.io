@@ -4,17 +4,26 @@ import * as THREE from "three";
 import { useNodesAndEdges } from "./useNodesAndEdges";
 import { useSceneSetup } from "./useSceneSetup";
 import { useGraphEvents } from "./useGraphEvents";
-import { setupPostProcessing } from "./usePostProcessing";
-import { NodeInfoPanels } from "./nodeInfoPanels";
+
 import { scanMaterial } from "./materials";
-import { HandTrackUI } from "./handtrack/HandTrackerUI";
 import { useHandCursor } from "./handtrack/useHandCursor";
 import { handleNodeSelection } from "./handleNodeSelection";
+import { useHandClick } from "./handtrack/useHandClick";
+
+
+import { NodeInfoPanels } from "./nodeInfoPanels";
 import { HandTracker } from "../HandTracker/HandTracker";
+import { CursorHandTrack } from "./handtrack/cursorHandTrack";
+import { TargetHandTrack } from "./handtrack/targetHandTrack";
+
+import { updateCursorPos } from "../utils/updateCursorPos";
+import { getClosestNode } from "../utils/getClosestNode";
 
 export default function Graph3D() {
   const mountRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const nodeInfoRef = useRef<HTMLDivElement>(null);
+  const cursorUIRef = useRef<HTMLDivElement>(null);
+  const targetUIRef = useRef<HTMLDivElement>(null);
   const newBoxSizeRef = useRef(25);
   const newScreenPos = useRef({ x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState<number | null>(null);
@@ -34,7 +43,8 @@ export default function Graph3D() {
   const controlsRef = useRef<any>();
   const landmarksRef = useRef<Array<Array<{ x: number; y: number; z: number }>>>([]);
   const handTrackerRef = useRef<HandTracker | null>(null);
-  const { cursorPos, closestNodeIndex, isClicking } = useHandCursor(landmarksRef, nodePositions2DRef.current);
+  const { closestNodeIndex, isClicking } = useHandCursor(landmarksRef, nodePositions2DRef.current);
+  const cursorPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!handTrackingEnabled) {
@@ -72,7 +82,7 @@ export default function Graph3D() {
     cameraRef.current = camera;
     controlsRef.current = controls;
     const { nodes, nodeMeshes, edges, simplex, orbiters } = useNodesAndEdges(8, nodeSizeRelation);
-    setupPostProcessing(renderer, scene, camera);
+
     nodeMeshesRef.current = nodeMeshes;
     nodeMeshes.forEach((m) => scene.add(m));
     edges.forEach((e) => scene.add(e.line));
@@ -115,6 +125,7 @@ export default function Graph3D() {
     renderer.domElement.addEventListener("click", onClick);
     renderer.domElement.addEventListener("dblclick", onDoubleClick);
     renderer.domElement.addEventListener("mousemove", onMouseMove);
+
     const clock = new THREE.Clock();
     const animate = () => {
       scanMaterial.uniforms.time.value = performance.now() / 1000;
@@ -153,7 +164,7 @@ export default function Graph3D() {
           setTimeout(() => setInfoOpacity(1), 20);
         }
       }
-      if (selectedNodeRef.current !== null && panelRef.current && cameraRef.current) {
+      if (selectedNodeRef.current !== null && nodeInfoRef.current && cameraRef.current) {
         const mesh = nodeMeshes[selectedNodeRef.current];
         const vector = mesh.position.clone().project(camera);
         const newScreenX = ((vector.x + 1) / 2) * renderer.domElement.clientWidth;
@@ -166,14 +177,57 @@ export default function Graph3D() {
         newBoxSizeRef.current = newBoxSize;
         newScreenPos.current.x = newScreenX;
         newScreenPos.current.y = newScreenY;
-        if (panelRef.current) {
+        if (nodeInfoRef.current) {
           const fontSize = newBoxSize * 0.15;
-          panelRef.current.style.width = `${newBoxSize}px`;
-          panelRef.current.style.height = `${newBoxSize}px`;
-          panelRef.current.style.transform = `translate(-50%, -50%) translate(${newScreenX}px, ${newScreenY}px)`;
-          panelRef.current.style.fontSize = `${fontSize}px`;
+          nodeInfoRef.current.style.width = `${newBoxSize}px`;
+          nodeInfoRef.current.style.height = `${newBoxSize}px`;
+          nodeInfoRef.current.style.transform = `translate(-50%, -50%) translate(${newScreenX}px, ${newScreenY}px)`;
+          nodeInfoRef.current.style.fontSize = `${fontSize}px`;
         }
       }
+
+      if (landmarksRef.current && cursorPosRef.current) {
+  const cursorPos = updateCursorPos(landmarksRef, cursorPosRef);
+  const targetPos = getClosestNode(cursorPos, nodePositions2DRef.current, 200);
+
+  // Mover el cursor (si existe)
+  if (cursorPos && cursorUIRef.current) {
+    cursorUIRef.current.style.transform = `translate(-50%, -50%) translate(${cursorPos.x}px, ${cursorPos.y}px)`;
+  }
+
+  if (targetUIRef.current) {
+    if (targetPos && cameraRef.current) {
+      const mesh = nodeMeshesRef.current[targetPos.index];
+      const dist = cameraRef.current.position.distanceTo(mesh.position);
+      const fovRad = (cameraRef.current.fov * Math.PI) / 180;
+      const visibleHeight = 2 * Math.tan(fovRad / 2) * dist;
+      const scaleFactor = 2;
+      const newTargetSize = (0.35 * renderer.domElement.clientHeight * scaleFactor) / visibleHeight;
+
+      targetUIRef.current.style.width = `${newTargetSize}px`;
+      targetUIRef.current.style.height = `${newTargetSize}px`;
+
+      const previousTargetPos = targetUIRef.current.dataset.prevPos
+        ? JSON.parse(targetUIRef.current.dataset.prevPos)
+        : cursorPos;
+
+      const smoothPos = {
+        x: previousTargetPos.x + (targetPos.position.x - previousTargetPos.x) * 0.1,
+        y: previousTargetPos.y + (targetPos.position.y - previousTargetPos.y) * 0.1,
+      };
+
+      targetUIRef.current.dataset.prevPos = JSON.stringify(smoothPos);
+
+      targetUIRef.current.style.transform = `translate(-50%, -50%) translate(${smoothPos.x}px, ${smoothPos.y}px)`;
+      targetUIRef.current.style.opacity = "1"; // mostrar
+
+    } else {
+      targetUIRef.current.style.opacity = "0";
+    }
+  }
+}
+
+
       nodePositions2DRef.current = nodeMeshes.map((mesh) => {
         const vector = mesh.position.clone().project(camera);
         return {
@@ -223,7 +277,7 @@ export default function Graph3D() {
         transitionFnRef,
         scanTimeoutRef,
       };
-      handleNodeSelection(closestNodeIndex, selectionDeps);
+      handleNodeSelection(closestNodeIndex.current, selectionDeps);
       clickConsumedRef.current = true;
     } else if (!isClicking) clickConsumedRef.current = false;
   }, [isClicking, closestNodeIndex, handTrackingEnabled]);
@@ -259,17 +313,25 @@ export default function Graph3D() {
         />
       </div>
       {selectedNode !== null && nodeMeshesRef.current[selectedNode] && (
-        <NodeInfoPanels ref={panelRef} mesh={nodeMeshesRef.current[selectedNode]} infoOpacity={infoOpacity} infoVisible={infoVisible} />
+        <NodeInfoPanels
+          ref={nodeInfoRef}
+          mesh={nodeMeshesRef.current[selectedNode]}
+          infoOpacity={infoOpacity}
+          infoVisible={infoVisible}
+        />
       )}
       {handTrackingEnabled && (
-        <HandTrackUI
-          ref={null}
-          boxSize={25}
-          cursorPos={cursorPos}
-          nodeProximity={nodePositions2DRef.current}
-          suggestDistance={200}
-          isclicking={isClicking}
-        />
+        <>
+
+          <CursorHandTrack
+            ref={cursorUIRef}
+            boxSize={25}
+          />
+          <TargetHandTrack
+            ref={targetUIRef}
+          />
+
+        </>
       )}
     </div>
   );
