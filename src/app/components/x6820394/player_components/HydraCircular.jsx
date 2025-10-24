@@ -85,11 +85,6 @@ export default function HydraCircle({ code, size }) {
     const width = Math.floor(rect.width * dpr);
     const height = Math.floor(rect.height * dpr);
 
-    console.log("resizeCanvas called");
-    console.log(`CSS size: ${Math.round(rect.width)} x ${Math.round(rect.height)} px`);
-    console.log(`Canvas size: ${width} x ${height} px`);
-    console.log(`DPR: ${dpr}`);
-
     const hasChanged =
       width !== lastSize.current.width || height !== lastSize.current.height;
 
@@ -104,11 +99,6 @@ export default function HydraCircle({ code, size }) {
       if (hydraRef.current) {
         hydraRef.current.setResolution(width, height);
       }
-
-      console.log(`[HydraCanvas] Resized:`);
-      console.log(`  CSS size:    ${Math.round(rect.width)} x ${Math.round(rect.height)} px`);
-      console.log(`  Canvas size: ${width} x ${height} px`);
-      console.log(`  DPR:         ${dpr}`);
     }
   };
 
@@ -162,13 +152,11 @@ export default function HydraCircle({ code, size }) {
     };
     updateAudio();
 
-    // Resize observer en el contenedor para cambios de tamaño
     observer = new ResizeObserver(() => {
       resizeCanvas();
     });
     if(containerRef.current) observer.observe(containerRef.current);
 
-    // Escuchar evento resize de la ventana
     const onResize = () => {
       resizeCanvas();
     };

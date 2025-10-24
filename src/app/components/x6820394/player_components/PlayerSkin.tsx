@@ -96,7 +96,7 @@ export default function PlayerSkin({
         <div style={{ transform: "rotate(25deg)" }}>
           <ChevronLeft
             size={20 * scale}
-            color="green"
+            color="gray"
             className={`transition-opacity duration-1000 ${
               opnPanel
                 ? "opacity-30 pointer-events-none image-back-group"
@@ -113,7 +113,7 @@ export default function PlayerSkin({
       icon: isPlaying ? (
         <Pause
           size={15 * scale}
-          color="green"
+          color="gray"
           className={`transition-opacity duration-1000 ${
             opnPanel
               ? "opacity-30 pointer-events-none image-back-group"
@@ -123,7 +123,7 @@ export default function PlayerSkin({
       ) : (
         <Play
           size={15 * scale}
-          color="green"
+          color="gray"
           className={`transition-opacity duration-1000 ${
             opnPanel
               ? "opacity-30 pointer-events-none image-back-group"
@@ -140,7 +140,7 @@ export default function PlayerSkin({
         <div style={{ transform: "rotate(-25deg)" }}>
           <ChevronRight
             size={20 * scale}
-            color="green"
+            color="gray"
             className={`transition-opacity duration-1000 ${
               opnPanel
                 ? "opacity-30 pointer-events-none image-back-group"
@@ -154,13 +154,13 @@ export default function PlayerSkin({
       x: 295,
       y: 313,
       onClick: onRandom,
-      icon: <Shuffle size={13 * scale} color="green" />,
+      icon: <Shuffle size={13 * scale} color="gray" />,
     },
     {
       x: 155,
       y: 313,
       onClick: openModal,
-      icon: <ListMusic size={14 * scale} color="green" />,
+      icon: <ListMusic size={14 * scale} color="gray" />,
     },
   ];
 
@@ -189,17 +189,23 @@ export default function PlayerSkin({
           justifyContent: "center",
         }}
       >
-        <div
-          style={{
-            width: 300,
-            height: 300,
-            borderRadius: "50%",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          <HydraDebug size={svgSize} />
-        </div>
+        
+      <div
+        style={{
+          width: 300,
+          height: 300,
+          borderRadius: "50%",
+          overflow: "hidden",
+          position: "relative",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <HydraDebug size={svgSize} />
+      </div>
+
+        
       </div>
 
       {/* Definición filtro SVG glow */}

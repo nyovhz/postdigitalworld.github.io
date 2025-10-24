@@ -21,11 +21,14 @@ export default function Timeline({
   };
 
   return (
-    <div className="mt-2 w-[300px] text-white text-xs flex items-center gap-2">
+    <div className="mt-2 w-[300px] text-white text-sm flex items-center gap-2">
       <span className="w-[40px] text-right">{formatTime(currentTime)}</span>
-      <div className="relative flex-1 h-2 cursor-pointer" onClick={handleClick}>
+      <div
+        className="relative flex-1 h-2 cursor-pointer rounded-full backdrop-blur-sm bg-transparent"
+        onClick={handleClick}
+      >
         <div
-          className="absolute top-0 left-0 h-full border border-[rgba(0,100,0,0.8)] bg-black rounded-full"
+          className="absolute top-0 left-0 h-full border rounded-full"
           style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
         />
       </div>

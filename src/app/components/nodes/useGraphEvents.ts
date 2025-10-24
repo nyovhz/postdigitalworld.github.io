@@ -3,6 +3,7 @@ import { createCameraTransition } from "./useCameraTransition";
 import { baseMaterial, hoverMaterial } from "./materials";
 import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass";
 import { handleNodeSelection } from "./handleNodeSelection";
+import { useSFX } from "../Audio/SFXProvider";
 
 type UseGraphEventsParams = {
   camera: THREE.PerspectiveCamera;
@@ -23,6 +24,7 @@ type UseGraphEventsParams = {
   transitionFnRef: React.MutableRefObject<((now: number) => boolean) | null>;
   scanTimeoutRef?: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
   bokehPass?: BokehPass;
+  play?: (category: keyof typeof SOUND_MAP, key: string, volume?: number) => void;
 };
 
 export const useGraphEvents = ({
@@ -43,8 +45,10 @@ export const useGraphEvents = ({
   setInfoOpacity,
   transitionFnRef,
   scanTimeoutRef,
+  play,
 }: UseGraphEventsParams) => {
   let hoveredNode: THREE.Mesh | null = null;
+  
 
   const onClick = (event: MouseEvent) => {
     const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -56,6 +60,7 @@ export const useGraphEvents = ({
     if (intersects.length > 0) {
       const mesh = intersects[0].object as THREE.Mesh;
       const id = mesh.userData.id as number;
+      play("ui", "transition");
 
       handleNodeSelection(id, {
         nodeMeshes,
@@ -72,6 +77,7 @@ export const useGraphEvents = ({
         setInfoOpacity,
         transitionFnRef,
         scanTimeoutRef,
+        play
       });
     }
   };
@@ -86,6 +92,7 @@ export const useGraphEvents = ({
     if (intersects.length === 0) {
       setInfoVisible(false);
       setInfoOpacity(0);
+      play("ui", "transition");
 
       nodeMeshes.forEach((m) => (m.material = baseMaterial));
       setSelectedNode(null);

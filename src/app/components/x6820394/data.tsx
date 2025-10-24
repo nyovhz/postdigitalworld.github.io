@@ -21,6 +21,11 @@ const device_playlist = [
     src:"https://res.cloudinary.com/dp39ooacq/video/upload/v1758841951/JOSUNE-AJUSCO_ezhc9g.mp3"
   },
   {
+    title: "SoloMusicaRomantica",
+    artist: "Donatella Chiara",
+    src:"https://res.cloudinary.com/dp39ooacq/video/upload/v1761288093/Solo_Musica_Romantica-Donatella_Chiara_khss3n.mp3"
+  },
+  {
     title: "Exemplaris Desfase",
     artist: "Emppty",
     src: "https://res.cloudinary.com/dp39ooacq/video/upload/v1758189637/Exemplaris-Desfase_ikwfcr.mp3"

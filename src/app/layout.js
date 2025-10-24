@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import localFont from "next/font/local";
 import { AudioProvider } from "@/app/components/Audio/AudioProvider";
+import { SFXProvider } from "./components/Audio/SFXProvider";
 
 const trenchFont = localFont({
   src: "./fonts/TrenchThin.ttf",
@@ -20,9 +21,11 @@ export default function RootLayout({ children }) {
       <body
         className={`${trenchFont.variable} antialiased select-none`}
       >
+        <SFXProvider>
           <AudioProvider>
             {children}
           </AudioProvider>
+        </SFXProvider>
       </body>
     </html>
   );

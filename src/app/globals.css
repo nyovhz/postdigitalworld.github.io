@@ -19,6 +19,14 @@
   }
 }
 
+@font-face {
+  font-family: "bannerFont";
+  src: url("https://res.cloudinary.com/<tu-cuenta>/raw/upload/miFuente.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+
 body {
   background: var(--background);
   color: var(--foreground);

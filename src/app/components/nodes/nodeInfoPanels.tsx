@@ -2,6 +2,7 @@
 import React, { forwardRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import TypewriterText from "../utils/TypewriterText";
+import { useSFX } from "../Audio/SFXProvider";
 
 interface NodeInfoPanelsProps {
   mesh: THREE.Mesh;
@@ -13,6 +14,7 @@ export const NodeInfoPanels = forwardRef<HTMLDivElement, NodeInfoPanelsProps>(
   ({ mesh, infoOpacity, infoVisible }, ref) => {
     const [showContent, setShowContent] = useState(false);
     const hasLink = !!mesh.userData.link;
+    
 
     useEffect(() => {
       if (infoVisible) {
@@ -89,6 +91,7 @@ export const NodeInfoPanels = forwardRef<HTMLDivElement, NodeInfoPanelsProps>(
               textAlign: "center",
               pointerEvents: "auto",
               borderRadius: "100%",
+              cursor: "pointer",
             }}
             onClick={() => window.open("nodes" + mesh.userData.link, "_blank")}
           >
@@ -150,7 +153,7 @@ export const NodeInfoPanels = forwardRef<HTMLDivElement, NodeInfoPanelsProps>(
 
           {showContent && (
             <TypewriterText
-              text={mesh.userData.description?.trim() ? mesh.userData.description : "connection refused"}
+              text={mesh.userData.description?.trim() ? mesh.userData.description : "corrupted data"}
               speed={100}
             />
           )}

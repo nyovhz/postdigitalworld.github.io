@@ -21,21 +21,18 @@ export default function Page() {
   }
 
   useEffect(() => {
-    // Simular carga de assets
     const timeout = setTimeout(() => {
-      setFadeOut(true) // Inicia fade-out
-      setTimeout(() => setIsLoading(false), 800) // Luego ocultar
+      setFadeOut(true)
+      setTimeout(() => setIsLoading(false), 800)
     }, 2000)
     return () => clearTimeout(timeout)
   }, [])
 
   return (
     <>
-      {/* Fondos */}
       {backgroundType === 1 && <ThreeBackground />}
       {backgroundType === 2 && <OceanBackground />}
 
-      {/* Player */}
       <Player
         playlist={device_playlist}
         playerSkin={device_skin}
@@ -44,10 +41,8 @@ export default function Page() {
         optimizeImageUrl={optimizeCloudinaryUrl}
       />
 
-      {/* Analizador circular */}
       <CircularAudioAnalyser />
 
-      {/* Leva inspector */}
       <div style={{ position: 'fixed', top: 10, left: 10, zIndex: 9999 }}>
         <Leva
           collapsed
@@ -57,13 +52,12 @@ export default function Page() {
               elevation1: "#121517",
               elevation2: "#000000",
               accent2: '#4b4b4b',
-              highlight2: "#50ff6dff"
+              highlight2: "#d1d1d1ff"
             },
           }}
         />
       </div>
 
-      {/* Loading overlay */}
       {isLoading && (
         <div
           style={{
@@ -88,27 +82,26 @@ export default function Page() {
               alignItems: 'center',
             }}
           >
-            {/* Contenedor fijo para Typewriter */}
+
             <div
               style={{
-                minHeight: '60px', // espacio fijo para evitar desplazamiento
+                minHeight: '60px',
                 display: 'flex',
                 alignItems: 'center',
               }}
             >
               <TypewriterText
                 text="x317962"
-                className="text-3xl md:text-5xl font-extrabold tracking-wider text-center text-[#35d851] select-none"
+                className="text-3xl md:text-5xl font-extrabold tracking-wider text-center text-gray select-none"
                 speed={80}
               />
             </div>
 
-            {/* Spinner */}
             <div
               style={{
                 width: 80,
                 height: 80,
-                border: '6px solid #35d851',
+                border: '6px solid #5f5f5fff',
                 borderTop: '6px solid transparent',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
@@ -119,7 +112,6 @@ export default function Page() {
         </div>
       )}
 
-      {/* Animación del spinner */}
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

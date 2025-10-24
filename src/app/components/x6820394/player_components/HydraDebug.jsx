@@ -85,7 +85,7 @@ export default function HydraDebug({ size }) {
         ],
         label: "Affect With HIGH",
       },
-      HighFreqIntensity: { value: 1.0, min: 0, max: 1, step: 0.01 },
+      HighFreqIntensity: { value: 0.7, min: 0, max: 1, step: 0.01 },
     }, { collapsed: true }),
     CAMERA: folder ({
       startCam: button(() => {
@@ -234,7 +234,7 @@ export default function HydraDebug({ size }) {
           .out();
 
         noise(modulatedNoiseScale, modulatedNoiseOffset).out(o1);
-        src(s0).out(o2)
+        src(s0).invert().out(o2)
         
 
       } catch (e) {
@@ -259,7 +259,7 @@ export default function HydraDebug({ size }) {
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none", zIndex: 10, backgroundColor: "black", }}
+      style={{ backgroundColor: "black", }}
     />
   );
 }

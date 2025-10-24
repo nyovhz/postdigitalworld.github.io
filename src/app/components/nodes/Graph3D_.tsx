@@ -18,6 +18,7 @@ import { TargetHandTrack } from "./handtrack/targetHandTrack";
 
 import { updateCursorPos } from "../utils/updateCursorPos";
 import { getClosestNode } from "../utils/getClosestNode";
+import { useSFX } from "../Audio/SFXProvider";
 
 export default function Graph3D() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -45,6 +46,7 @@ export default function Graph3D() {
   const handTrackerRef = useRef<HandTracker | null>(null);
   const { closestNodeIndex, isClicking } = useHandCursor(landmarksRef, nodePositions2DRef.current);
   const cursorPosRef = useRef({ x: 0, y: 0 });
+  const { play } = useSFX();
 
   useEffect(() => {
     if (!handTrackingEnabled) {
@@ -104,6 +106,7 @@ export default function Graph3D() {
       setInfoOpacity,
       transitionFnRef,
       scanTimeoutRef,
+      play
     };
     const { onClick, onDoubleClick, onMouseMove } = useGraphEvents({
       ...selectionDeps,
@@ -112,6 +115,7 @@ export default function Graph3D() {
       InitialCameraPos,
       setSelectedNode: (id) => handleNodeSelection(id, selectionDeps),
       bokehPass: null,
+      play
     });
     const onWindowResize = () => {
       if (!mountRef.current) return;
@@ -276,6 +280,7 @@ export default function Graph3D() {
         setInfoOpacity,
         transitionFnRef,
         scanTimeoutRef,
+        play
       };
       handleNodeSelection(closestNodeIndex.current, selectionDeps);
       clickConsumedRef.current = true;

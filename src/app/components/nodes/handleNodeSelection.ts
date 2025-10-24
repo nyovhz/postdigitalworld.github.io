@@ -18,6 +18,7 @@ export type HandleNodeSelectionDeps = {
   setInfoOpacity: (n: number) => void;
   transitionFnRef: React.MutableRefObject<((now: number) => boolean) | null>;
   scanTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
+  play?: (category: keyof typeof SOUND_MAP, key: string, volume?: number) => void;
 };
 
 export function handleNodeSelection(id: number, deps: HandleNodeSelectionDeps) {
@@ -36,6 +37,7 @@ export function handleNodeSelection(id: number, deps: HandleNodeSelectionDeps) {
     setInfoOpacity,
     transitionFnRef,
     scanTimeoutRef,
+    play
   } = deps;
 
   const mesh = nodeMeshes[id];
@@ -61,6 +63,7 @@ export function handleNodeSelection(id: number, deps: HandleNodeSelectionDeps) {
       m.material = i === id ? selectedMaterial : baseMaterial;
     });
     scanTimeoutRef.current = null;
+    play("ui", "resolution",0.2);
   }, 2000);
 
   const startPoint = mesh.position

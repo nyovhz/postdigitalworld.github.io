@@ -17,17 +17,17 @@ export default function PlaylistModal({
   const { setCurrentTrackIndex, currentTrack } = useAudio();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 sm:p-8">
-      <div className="bg-white/10 p-4 sm:p-6 rounded-xl w-full max-w-sm sm:max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-8">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-xl w-full max-w-sm sm:max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar border border-white/20 shadow-lg">
         <ul className="space-y-2">
           {playlist.map((track, i) => {
             const isCurrent = currentTrack?.src === track.src;
-
             return (
               <li
                 key={`${track.src}-${i}`}
-                className={`cursor-pointer hover:bg-black/50 p-2 rounded transition ${
-                  isCurrent ? "border border-green-500/40" : ""
+                className={`cursor-pointer hover:bg-white/10 p-2 rounded-full transition ${
+                  isCurrent ? "" : ""
                 }`}
                 onClick={() => {
                   setCurrentTrackIndex(i);
@@ -41,7 +41,7 @@ export default function PlaylistModal({
                     track.title || "Sin título"
                   )}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400 truncate text-center">
+                <div className="text-xs sm:text-sm text-gray-300 truncate text-center">
                   {track.artist || "Desconocido"}
                 </div>
               </li>
